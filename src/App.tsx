@@ -3,19 +3,29 @@ import usersFromServer from './api/users';
 import todosFromServer from './api/todos';
 import { useState } from 'react';
 import { TodoList } from './components/TodoList';
-import { User } from './types/User';
 
 export const App = () => {
-  const getUserById = (userId: number): User | undefined => {
-    return usersFromServer.find(user => userId === user.id);
-  };
-
   const [title, setTitle] = useState('');
   const [userSelect, setUserSelect] = useState('');
   const [currentTodo, setNewTodo] = useState(todosFromServer);
+  const [titleError, setTitleError] = useState(false);
+  const [selectError, setSelectError] = useState(false);
+
+  const todosWithUsers: [] = currentTodo.map(todo => ({
+    ...todo,
+    user: usersFromServer.find(user => user.id === todo.userId),
+  }));
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (!title) {
+      setTitleError(true);
+    }
+
+    if (!userSelect) {
+      setSelectError(true);
+    }
 
     if (title && userSelect) {
       const newId = Math.max(...currentTodo.map(todo => todo.id)) + 1;
@@ -41,7 +51,12 @@ export const App = () => {
   return (
     <div className="App">
       <h1>Add todo form</h1>
-      <form action="/api/todos" method="POST" onSubmit={handleSubmit}>
+      <form
+        action="/api/todos"
+        method="POST"
+        onSubmit={handleSubmit}
+        noValidate
+      >
         <div className="field">
           <label htmlFor="title">Title</label>
           <input
@@ -50,10 +65,13 @@ export const App = () => {
             data-cy="titleInput"
             value={title}
             id="title"
-            onChange={event => setTitle(event.target.value)}
+            onChange={event => {
+              setTitle(event.target.value);
+              setTitleError(false);
+            }}
             placeholder="Enter todo title"
           />
-          {!title && <span className="error">Please enter a title</span>}
+          {titleError && <span className="error">Please enter a title</span>}
         </div>
 
         <div className="field">
@@ -63,7 +81,10 @@ export const App = () => {
             data-cy="userSelect"
             value={userSelect}
             id="userSelect"
-            onChange={event => setUserSelect(event.target.value)}
+            onChange={event => {
+              setUserSelect(event.target.value);
+              setSelectError(false);
+            }}
           >
             <option value="" disabled>
               Choose a user
@@ -77,14 +98,14 @@ export const App = () => {
             })}
           </select>
 
-          {!userSelect && <span className="error">Please choose a user</span>}
+          {selectError && <span className="error">Please choose a user</span>}
         </div>
 
         <button type="submit" data-cy="submitButton">
           Add
         </button>
       </form>
-      <TodoList todos={currentTodo} getUserById={getUserById} />
+      <TodoList todos={todosWithUsers} />
     </div>
   );
 };

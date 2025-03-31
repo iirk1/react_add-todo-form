@@ -1,13 +1,10 @@
 import { User } from '../../types/User';
 
 type Props = {
-  getUserById: (value: number) => User | undefined;
-  userId: number;
+  user: User;
 };
 
-export const UserInfo: React.FC<Props> = ({ getUserById, userId }) => {
-  const user = getUserById(userId);
-
+export const UserInfo: React.FC<Props> = ({ user }) => {
   if (!user) {
     return <div>User not found</div>;
   }
